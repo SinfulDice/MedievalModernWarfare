@@ -1,0 +1,10 @@
+export const GAME_CONFIG = {
+    WORLD_WIDTH: 4800,
+    WORLD_HEIGHT: 3200,
+    GROUND_HEIGHT: 800,
+    HILL_HEIGHT: 800,
+    HILL_LENGTH: 1400,
+    TILE_SIZE: 16,
+    WALL_THICKNESS: 100,
+    WALL_LABEL: 'map_limit'
+};
