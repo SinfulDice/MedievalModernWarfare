@@ -57,6 +57,7 @@ export class GameScene {
         this.onMouseDown = this.handleMouseDown.bind(this);
         this.onMouseMove = this.trackMouse.bind(this);
         this.onKeyDown   = this.handleKeyPress.bind(this);
+        this.onKeyUp     = this.handleKeyUp.bind(this);
         this.onWheel     = this.handleWheel.bind(this);
         this._preventContextMenu = (e) => {
             if (this.turnState === 'ACTING') e.preventDefault();
@@ -145,6 +146,7 @@ export class GameScene {
         window.addEventListener('mousedown', this.onMouseDown);
         window.addEventListener('mousemove', this.onMouseMove);
         window.addEventListener('keydown',   this.onKeyDown);
+        window.addEventListener('keyup',     this.onKeyUp);
         window.addEventListener('wheel',     this.onWheel, { passive: false });
         window.addEventListener('contextmenu', this._preventContextMenu);
         Events.on(engine, 'collisionStart', this.collisionHandler);
@@ -549,15 +551,43 @@ export class GameScene {
 
         if (this.turnState !== 'ACTING') return;
 
+        if (e.code === 'KeyR') {
+            if (e.repeat) return;
+            const p = this.players[this.currentPlayerIndex];
+            if (p && p.isActive && !p.isCharging) {
+                p.isCharging = true;
+                p.charge = 0;
+            }
+            return;
+        }
+
         if (e.code === 'KeyF') {
             if (!e.repeat) this.buildBeam();
             return;
         }
 
         if (e.code === 'KeyE') {
+            if (e.repeat) return;
+            this.drill();
+            this._blinkDigButton();
+            return;
+        }
+
+        if (e.code === 'KeyA') {
+            if (e.repeat) return;
             this._toggleShopFromKey();
             return;
         }
+    }
+
+    handleKeyUp(e) {
+        if (this.turnState !== 'ACTING') return;
+        if (e.code !== 'KeyR') return;
+
+        const p = this.players[this.currentPlayerIndex];
+        if (!p || !p.isActive || !p.isCharging) return;
+
+        this.shoot({ button: 0, target: document.body });
     }
 
     _toggleShopFromKey() {
@@ -1782,6 +1812,7 @@ export class GameScene {
             if (!bulletBody) return;
             const bulletObj = this._bulletByBody.get(bulletBody);
             if (!bulletObj) return;
+            if (bulletObj.isDead) return;
             const otherBody = bodyA === bulletBody ? bodyB : bodyA;
             const cfg = bulletObj.config;
             const chargeRatio = bulletObj.chargeRatio ?? 1;
@@ -1873,6 +1904,7 @@ export class GameScene {
         window.removeEventListener('mousedown', this.onMouseDown);
         window.removeEventListener('mousemove', this.onMouseMove);
         window.removeEventListener('keydown',   this.onKeyDown);
+        window.removeEventListener('keyup',     this.onKeyUp);
         window.removeEventListener('wheel',     this.onWheel);
         window.removeEventListener('contextmenu', this._preventContextMenu);
         Events.off(engine, 'collisionStart', this.collisionHandler);

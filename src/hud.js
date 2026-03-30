@@ -344,18 +344,18 @@ export function createHUD(players, terrain) {
             <div>
                 <div class="sec-lbl">Combat</div>
                 <div class="hrow"><span class="hact">Viser</span><div class="hkeys"><span class="hkey">🖱️</span></div></div>
-                <div class="hrow"><span class="hact">Charger/Tirer</span><div class="hkeys"><span class="hkey w">Clic gauche</span></div></div>
+                <div class="hrow"><span class="hact">Charger/Tirer</span><div class="hkeys"><span class="hkey">R</span><span style="color:rgba(51,255,136,.3)">/</span><span class="hkey w">Clic gauche</span></div></div>
                 <div class="hrow"><span class="hact">Démarrer tour</span><div class="hkeys"><span class="hkey w">Toute touche</span></div></div>
             </div>
             <div class="hdiv"></div>
             <div>
                 <div class="sec-lbl">Creuser</div>
-                <div class="hrow"><span class="hact">Creuser devant soi</span><div class="hkeys"><span class="hkey w">Clic droit</span></div></div>
+                <div class="hrow"><span class="hact">Creuser devant soi</span><div class="hkeys"><span class="hkey">E</span></div></div>
             </div>
             <div class="hdiv"></div>
             <div>
                 <div class="sec-lbl">Shop</div>
-                <div class="hrow"><span class="hact">Ouvrir/Fermer shop</span><div class="hkeys"><span class="hkey">E</span></div></div>
+                <div class="hrow"><span class="hact">Ouvrir/Fermer shop</span><div class="hkeys"><span class="hkey">A</span></div></div>
             </div>
             <div class="hdiv"></div>
             <div>
@@ -401,7 +401,7 @@ export function createHUD(players, terrain) {
                 </div>
             </div>
         </div>
-        <div class="tip-bar"><span class="tip-txt">Maintenez clic gauche puis relâchez pour tirer. Clic droit creuse. E ouvre le shop. F construit au curseur (1 plateforme max / tour).</span></div>
+        <div class="tip-bar"><span class="tip-txt">Maintenez R (ou clic gauche) puis relâchez pour tirer. E creuse. A ouvre le shop. F construit au curseur (1 plateforme max / tour).</span></div>
     `);
     bind(cmdBtn, cmdPop);
 
@@ -681,7 +681,7 @@ export function createHUD(players, terrain) {
     const digBtn = document.createElement('div');
     digBtn.id = 'hud-dig-btn';
     digBtn.setAttribute('data-hud', '');
-    digBtn.innerHTML = `<img src="assets/items/Shovel.png" alt="Creuser"><span class="hb-lbl">Clic droit</span>`;
+    digBtn.innerHTML = `<img src="assets/items/Shovel.png" alt="Creuser"><span class="hb-lbl">E</span>`;
     document.body.appendChild(digBtn);
 
     digBtn.addEventListener('click', e => {

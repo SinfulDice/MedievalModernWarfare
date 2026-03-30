@@ -241,7 +241,7 @@ export class Player {
         let targetVx = 0;
         if (this.isActive && !this.movementLocked) {
             if (keys['KeyD']) { targetVx = 4; this.facingDir = 1; }
-            if (keys['KeyQ'] || keys['KeyA']) { targetVx = -4; this.facingDir = -1; }
+            if (keys['KeyQ']) { targetVx = -4; this.facingDir = -1; }
 
             const rawGrounded = isBodyGrounded(this.body);
             if (rawGrounded) {
