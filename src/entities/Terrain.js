@@ -12,6 +12,7 @@ export class Terrain {
         this.blocks = [];
         this.tileSize = 16;
         this.grassTexture = null;
+        this.isFlat = false;
 
         this.p1SpawnX = 300;
         this.p1SpawnY = 100;
@@ -23,6 +24,11 @@ export class Terrain {
     _surfaceY(x, worldHeight) {
         const T      = this.tileSize;
         const baseY  = worldHeight - GAME_CONFIG.GROUND_HEIGHT;
+
+        if (this.isFlat) {
+            return Math.round(baseY / T) * T;
+        }
+
         const peakY  = baseY - GAME_CONFIG.HILL_HEIGHT;
         const halfW  = GAME_CONFIG.HILL_LENGTH / 2;
         const slopeW = 500;
@@ -41,8 +47,9 @@ export class Terrain {
         return Math.round((baseY - offset) / T) * T;
     }
 
-    async generate(worldWidth, worldHeight) {
+    async generate(worldWidth, worldHeight, options = {}) {
         const T = this.tileSize;
+        this.isFlat = !!options.flat;
         const dirtTexture  = await Assets.load('assets/backgrounds/Dirt.png');
         const grassTexture = await Assets.load('assets/backgrounds/GrassDirt.png');
         this.grassTexture = grassTexture;
@@ -56,23 +63,24 @@ export class Terrain {
             }
         }
 
-        const baseY = worldHeight - GAME_CONFIG.GROUND_HEIGHT;
-        const peakY = baseY - GAME_CONFIG.HILL_HEIGHT;
+        if (!this.isFlat) {
+            const baseY = worldHeight - GAME_CONFIG.GROUND_HEIGHT;
 
-        // ── 2. Plateformes dans le vallon (centre ~2400) ──
-        const valleyPlatforms = [
-            { cx: 2000, y: baseY - 280,  w: 128 },
-            { cx: 2400, y: baseY - 480,  w: 112 },
-            { cx: 2800, y: baseY - 280,  w: 128 },
-            { cx: 2200, y: baseY - 680,  w: 96  },
-            { cx: 2600, y: baseY - 680,  w: 96  },
-            { cx: 2400, y: baseY - 880,  w: 112 },
-            { cx: 1800, y: baseY - 180,  w: 96  },
-            { cx: 3000, y: baseY - 180,  w: 96  },
-        ];
+            // ── 2. Plateformes dans le vallon (centre ~2400) ──
+            const valleyPlatforms = [
+                { cx: 2000, y: baseY - 280,  w: 128 },
+                { cx: 2400, y: baseY - 480,  w: 112 },
+                { cx: 2800, y: baseY - 280,  w: 128 },
+                { cx: 2200, y: baseY - 680,  w: 96  },
+                { cx: 2600, y: baseY - 680,  w: 96  },
+                { cx: 2400, y: baseY - 880,  w: 112 },
+                { cx: 1800, y: baseY - 180,  w: 96  },
+                { cx: 3000, y: baseY - 180,  w: 96  },
+            ];
 
-        for (const isle of valleyPlatforms) {
-            this._addPlatform(isle.cx, isle.y, isle.w, T, grassTexture, dirtTexture);
+            for (const isle of valleyPlatforms) {
+                this._addPlatform(isle.cx, isle.y, isle.w, T, grassTexture, dirtTexture);
+            }
         }
 
         // ── 3. Spawns ──

@@ -7,6 +7,7 @@ import { CreditsScene } from '../scenes/CreditsScene.js';
 export class SceneManager {
     constructor(app) {
         this.app = app;
+        this.currentSceneKey = null;
         this.scenes = {
             menu: MenuScene,
             charSelect: CharacterSelectionScene,
@@ -18,6 +19,12 @@ export class SceneManager {
     }
 
     async changeScene(sceneKey, options = {}) {
+        // Si on revient au menu depuis une autre scene, on force un rechargement complet.
+        if (sceneKey === 'menu' && this.currentSceneKey && this.currentSceneKey !== 'menu') {
+            window.location.reload();
+            return;
+        }
+
         if (this.currentScene) {
             if (this.currentScene.container) {
                 this.app.stage.removeChild(this.currentScene.container);
@@ -35,6 +42,7 @@ export class SceneManager {
         }
 
         this.currentScene = new SceneClass(this.app, this);
+        this.currentSceneKey = sceneKey;
         await this.currentScene.init(options);
         if (this.currentScene.container) {
             this.app.stage.addChild(this.currentScene.container);

@@ -280,7 +280,7 @@ export class CreditsScene {
             }
             #credits-screen .cr-intro-title {
                 color: #f5c16a;
-                font-size: 1.26rem;
+                font-size: 1.52rem;
                 letter-spacing: .08em;
                 line-height: 1.35;
                 text-shadow: 0 0 18px rgba(245,193,106,.45);
@@ -288,32 +288,32 @@ export class CreditsScene {
             #credits-screen .cr-intro-sub {
                 margin-top: 16px;
                 color: rgba(220,235,225,.78);
-                font-size: .38rem;
+                font-size: .48rem;
                 letter-spacing: .06em;
                 line-height: 1.9;
             }
             #credits-screen .cr-head {
                 color: #33ff88;
-                font-size: .7rem;
+                font-size: .88rem;
                 letter-spacing: .12em;
                 text-shadow: 0 0 14px rgba(51,255,136,.35);
                 margin-bottom: 12px;
             }
             #credits-screen .cr-sub {
                 color: rgba(200,225,210,.72);
-                font-size: .3rem;
+                font-size: .38rem;
                 margin-bottom: 8px;
             }
             #credits-screen .cr-role {
                 color: #44ccff;
-                font-size: .44rem;
+                font-size: .56rem;
                 letter-spacing: .08em;
                 margin-bottom: 12px;
                 text-transform: uppercase;
             }
             #credits-screen .cr-name {
                 color: #cfe9db;
-                font-size: .36rem;
+                font-size: .46rem;
                 letter-spacing: .06em;
                 line-height: 1.9;
             }
@@ -324,7 +324,7 @@ export class CreditsScene {
                 background: linear-gradient(90deg, transparent 0%, rgba(68,204,255,.5) 30%, rgba(51,255,136,.5) 70%, transparent 100%);
             }
             #credits-screen .cr-line {
-                font-size: .28rem;
+                font-size: .36rem;
                 color: rgba(220,235,225,.75);
                 line-height: 1.85;
                 letter-spacing: .05em;
@@ -335,17 +335,17 @@ export class CreditsScene {
             }
             #credits-screen .cr-thanks {
                 color: #f5c16a;
-                font-size: .52rem;
+                font-size: .66rem;
                 letter-spacing: .08em;
                 text-shadow: 0 0 14px rgba(245,193,106,.35);
             }
             @media (max-width: 900px) {
-                #credits-screen .cr-intro-title { font-size: .72rem; }
-                #credits-screen .cr-intro-sub { font-size: .31rem; }
-                #credits-screen .cr-role { font-size: .34rem; }
-                #credits-screen .cr-name { font-size: .3rem; }
-                #credits-screen .cr-head { font-size: .52rem; }
-                #credits-screen .cr-thanks { font-size: .38rem; }
+                #credits-screen .cr-intro-title { font-size: .9rem; }
+                #credits-screen .cr-intro-sub { font-size: .38rem; }
+                #credits-screen .cr-role { font-size: .42rem; }
+                #credits-screen .cr-name { font-size: .36rem; }
+                #credits-screen .cr-head { font-size: .64rem; }
+                #credits-screen .cr-thanks { font-size: .48rem; }
             }
         `;
         document.head.appendChild(style);

@@ -30,6 +30,21 @@ export class GameScene {
         this.frameCounter = 0;
         this.hud = null;
         this.timerTopY = 170;
+        this.isTutorial = false;
+        this.tutorialOverlay = null;
+        this.tutorialState = {
+            movedLeft: false,
+            movedRight: false,
+            jumped: false,
+            shopUsed: false,
+            bazookaShot: false,
+            dug: false,
+            built: false,
+        };
+        this._tutorialStartPos = null;
+        this._tutorialShopBtn = null;
+        this._tutorialShopBtnHandler = null;
+        this._tutorialBackBtn = null;
 
         this._drillUsedThisTurn = false;
         this._activeDrops = [];
@@ -88,6 +103,8 @@ export class GameScene {
     }
 
     async init(options) {
+        this.isTutorial = !!options?.tutorial;
+
         this.container.addChild(this.worldContainer);
         this.container.addChild(this.uiContainer);
 
@@ -103,7 +120,9 @@ export class GameScene {
         this.worldContainer.addChild(background);
 
         this.terrain = new Terrain();
-        await this.terrain.generate(GAME_CONFIG.WORLD_WIDTH, GAME_CONFIG.WORLD_HEIGHT);
+        await this.terrain.generate(GAME_CONFIG.WORLD_WIDTH, GAME_CONFIG.WORLD_HEIGHT, {
+            flat: this.isTutorial,
+        });
         this.worldContainer.addChild(this.terrain.container);
 
         this.players = [
@@ -156,7 +175,153 @@ export class GameScene {
         await audioManager.init();
         audioManager.playMusic('GameMusic', true);
 
-        this.startShopping();
+        if (this.isTutorial) {
+            this._setupTutorialMode();
+        } else {
+            this.startShopping();
+        }
+    }
+
+    _setupTutorialMode() {
+        this.currentPlayerIndex = 0;
+        this.turnState = 'ACTING';
+        this.turnTimer = 9999;
+
+        this.players.forEach((p, idx) => {
+            p.isActive = idx === 0;
+            p.movementLocked = idx !== 0;
+        });
+
+        const trainee = this.players[0];
+        const dummy = this.players[1];
+        if (dummy?.body) {
+            Body.setVelocity(dummy.body, { x: 0, y: 0 });
+        }
+
+        this.timerText.visible = false;
+        this.timerFrame.visible = false;
+        this.infoText.visible = false;
+        this.turnOverlay.visible = false;
+
+        this._tutorialStartPos = {
+            x: trainee?.body?.position?.x ?? 0,
+            y: trainee?.body?.position?.y ?? 0,
+        };
+
+        this._createTutorialOverlay();
+        this._createTutorialBackButton();
+
+        // Le shop HUD est cree apres createHUD; on branche le tracking une fois disponible.
+        setTimeout(() => {
+            const btn = document.getElementById('hud-shop-btn');
+            if (!btn) return;
+            this._tutorialShopBtn = btn;
+            this._tutorialShopBtnHandler = () => {
+                this.tutorialState.shopUsed = true;
+                this._renderTutorialOverlay();
+            };
+            btn.addEventListener('click', this._tutorialShopBtnHandler);
+        }, 0);
+
+        this.camera.follow(trainee.body);
+    }
+
+    _createTutorialBackButton() {
+        if (this._tutorialBackBtn) {
+            this._tutorialBackBtn.remove();
+            this._tutorialBackBtn = null;
+        }
+
+        const btn = document.createElement('button');
+        btn.id = 'hud-tuto-back-btn';
+        btn.className = 'hb';
+        btn.setAttribute('data-hud', '');
+        btn.innerHTML = '<span class="hb-lbl" style="max-width:none">Menu</span>';
+        btn.style.cssText = `
+            top: 16px;
+            left: 84px;
+            width: 76px;
+            height: 54px;
+            z-index: 1002;
+        `;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.manager.changeScene('menu');
+        });
+
+        document.body.appendChild(btn);
+        this._tutorialBackBtn = btn;
+    }
+
+    _createTutorialOverlay() {
+        if (this.tutorialOverlay) this.tutorialOverlay.remove();
+
+        const wrap = document.createElement('div');
+        wrap.id = 'tutorial-overlay';
+        wrap.setAttribute('data-hud', '');
+        wrap.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9200;
+            width: min(520px, calc(100vw - 24px));
+            background: rgba(8, 14, 24, 0.92);
+            border: 2px solid rgba(142,210,255,.55);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(142,210,255,.24);
+            font-family: 'Press Start 2P', monospace;
+            color: #d7efff;
+            padding: 14px 16px;
+            line-height: 1.8;
+            pointer-events: none;
+        `;
+        this.tutorialOverlay = wrap;
+        document.body.appendChild(wrap);
+        this._renderTutorialOverlay();
+    }
+
+    _renderTutorialOverlay() {
+        if (!this.tutorialOverlay) return;
+
+        const s = this.tutorialState;
+        const movementDone = s.movedLeft && s.movedRight && s.jumped;
+        const allDone = movementDone && s.shopUsed && s.bazookaShot && s.dug && s.built;
+        const row = (ok, label, hint) => {
+            const mark = ok ? '✓' : '•';
+            const color = ok ? '#7bffad' : '#d7efff';
+            return `<div style="display:flex;gap:8px;align-items:flex-start;color:${color}"><span>${mark}</span><span>${label}<span style="color:rgba(215,239,255,.65)"> — ${hint}</span></span></div>`;
+        };
+
+        this.tutorialOverlay.innerHTML = `
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px">
+                <div style="font-size:.52rem;letter-spacing:.08em;color:#8ed2ff">TUTORIEL INTERACTIF</div>
+                <div style="font-size:.33rem;color:rgba(215,239,255,.7)">${allDone ? 'Termine' : 'En cours'}</div>
+            </div>
+            <div style="font-size:.33rem;color:rgba(215,239,255,.85);margin-bottom:10px">
+                Objectif: apprendre les touches essentielles en situation reelle.
+            </div>
+            ${row(movementDone, 'Se deplacer', 'Q et D puis saut (Espace)')}
+            ${row(s.shopUsed, 'Utiliser le shop', 'A ou bouton Shop')}
+            ${row(s.bazookaShot, 'Tirer au bazooka', 'Selectionnez Bazooka (2), maintenez R puis relachez')}
+            ${row(s.dug, 'Creuser', 'Appuyez sur E (ou bouton Pelle)')}
+            ${row(s.built, 'Construire une plateforme', 'F pour poser, molette ou X/W pour orienter')}
+            <div style="margin-top:10px;font-size:.32rem;color:rgba(142,210,255,.88)">Camera: fleches directionnelles pour deplacer la vue, puis Enter pour recentrer sur le joueur.</div>
+            ${allDone ? '<div style="margin-top:10px;font-size:.34rem;color:#7bffad">Bravo, toutes les actions du tutoriel sont validees. Vous pouvez revenir au menu quand vous voulez.</div>' : ''}
+        `;
+    }
+
+    _updateTutorialProgress() {
+        if (!this.isTutorial) return;
+        const p = this.players[0];
+        if (!p?.body) return;
+
+        if (keys['KeyA']) this.tutorialState.movedLeft = true;
+        if (keys['KeyD']) this.tutorialState.movedRight = true;
+        if (p.body.position.x < this._tutorialStartPos.x - 14) this.tutorialState.movedLeft = true;
+        if (p.body.position.x > this._tutorialStartPos.x + 14) this.tutorialState.movedRight = true;
+        if (p.body.velocity.y < -2.4) this.tutorialState.jumped = true;
+
+        this._renderTutorialOverlay();
     }
 
     // ── Convertit les coords écran → monde ──
@@ -566,6 +731,26 @@ export class GameScene {
             return;
         }
 
+        if (e.code === 'KeyX') {
+            if (e.repeat) return;
+            const len = this._beamAngles.length;
+            this._beamSlotIndex = (this._beamSlotIndex + 1) % len;
+            this.infoText.text = `Angle build: ${this._beamSlotIndex + 1}/${len}`;
+            this.infoText.visible = true;
+            setTimeout(() => { if (this.turnState === 'ACTING') this.infoText.visible = false; }, 650);
+            return;
+        }
+
+        if (e.code === 'KeyZ') {
+            if (e.repeat) return;
+            const len = this._beamAngles.length;
+            this._beamSlotIndex = (this._beamSlotIndex - 1 + len) % len;
+            this.infoText.text = `Angle build: ${this._beamSlotIndex + 1}/${len}`;
+            this.infoText.visible = true;
+            setTimeout(() => { if (this.turnState === 'ACTING') this.infoText.visible = false; }, 650);
+            return;
+        }
+
         if (e.code === 'KeyE') {
             if (e.repeat) return;
             this.drill();
@@ -573,7 +758,7 @@ export class GameScene {
             return;
         }
 
-        if (e.code === 'KeyA') {
+        if (e.code === 'KeyQ') {
             if (e.repeat) return;
             this._toggleShopFromKey();
             return;
@@ -591,6 +776,10 @@ export class GameScene {
     }
 
     _toggleShopFromKey() {
+        if (this.isTutorial) {
+            this.tutorialState.shopUsed = true;
+            this._renderTutorialOverlay();
+        }
         const shopBtn = document.getElementById('hud-shop-btn');
         if (shopBtn) shopBtn.click();
     }
@@ -666,7 +855,7 @@ export class GameScene {
         const p = this.players[this.currentPlayerIndex];
         if (!p || this.turnState !== 'ACTING') return;
 
-        if (this._beamBuiltThisTurn) {
+        if (!this.isTutorial && this._beamBuiltThisTurn) {
             this.infoText.text = '❌ 1 plateforme max par tour';
             this.infoText.visible = true;
             setTimeout(() => { this.infoText.visible = false; }, 900);
@@ -691,7 +880,12 @@ export class GameScene {
             return;
         }
 
-        this._beamBuiltThisTurn = true;
+        if (!this.isTutorial) {
+            this._beamBuiltThisTurn = true;
+        } else {
+            this.tutorialState.built = true;
+            this._renderTutorialOverlay();
+        }
 
         this.infoText.text = `🪵 Poutre placee (${placed} blocs)`;
         this.infoText.visible = true;
@@ -734,6 +928,8 @@ export class GameScene {
         const sinA = Math.abs(Math.sin(angle));
         const cosA = Math.abs(Math.cos(angle));
 
+        let destroyedTotal = 0;
+
         if (sinA > 0.7) {
             // Creuse vers le haut ou vers le bas
             const dir = Math.sin(angle) > 0 ? 1 : -1; // 1 = bas, -1 = haut
@@ -746,6 +942,7 @@ export class GameScene {
             if (destroyed > 0) {
                 Body.setVelocity(p.body, { x: p.body.velocity.x, y: dir * 7 });
             }
+            destroyedTotal += destroyed;
         } else {
             // Creuse horizontalement
             const dir = Math.cos(angle) >= 0 ? 1 : -1;
@@ -758,6 +955,12 @@ export class GameScene {
             if (destroyed > 0) {
                 Body.setVelocity(p.body, { x: dir * 6, y: Math.min(p.body.velocity.y, 2) });
             }
+            destroyedTotal += destroyed;
+        }
+
+        if (this.isTutorial && destroyedTotal > 0) {
+            this.tutorialState.dug = true;
+            this._renderTutorialOverlay();
         }
 
     }
@@ -921,6 +1124,11 @@ export class GameScene {
         // Jouer le son du sniper si c'est une arme d'attaque
         if (cfg.type === 'SNIPER') {
             audioManager.playSniper();
+        }
+
+        if (this.isTutorial && cfg.type === 'BAZOOKA') {
+            this.tutorialState.bazookaShot = true;
+            this._renderTutorialOverlay();
         }
 
         p.resetCharge();
@@ -1646,7 +1854,7 @@ export class GameScene {
 
         // ── 1. Input & vélocités (AVANT la physique → zéro lag d'input)
         this.players.forEach(p => {
-            p.applyInput();
+            p.applyInput(delta);
             if (p.hp > 0 && p.body.position.y > GAME_CONFIG.WORLD_HEIGHT + 100) p.takeDamage(999);
         });
 
@@ -1660,12 +1868,13 @@ export class GameScene {
         // ── 3. Sync visuels APRÈS la physique (position à jour)
         this.players.forEach(p => p.syncVisuals());
         this._updateBeamPreview();
+        if (this.isTutorial) this._updateTutorialProgress();
 
         // ── 3b. Mise a jour des drops (caisses soins/or)
         this._updateDrops(delta);
 
         // Résolution de morts (chute/bombes event/etc.) même hors phase de tir.
-        if (this.turnState !== 'FINISHED') {
+        if (!this.isTutorial && this.turnState !== 'FINISHED') {
             const aliveNow = this.players.filter(p => p.hp > 0);
             if (aliveNow.length <= 1) {
                 this.showVictory(aliveNow[0] || this.players[0]);
@@ -1681,7 +1890,7 @@ export class GameScene {
 
         if (this.camera) this.camera.update();
 
-        if (this.turnState === 'PREPARING' || this.turnState === 'ACTING') {
+        if (!this.isTutorial && (this.turnState === 'PREPARING' || this.turnState === 'ACTING')) {
             this.turnTimer -= ticker.deltaMS / 1000;
             const secLeft = Math.max(0, Math.ceil(this.turnTimer));
             this.timerText.text = secLeft.toString();
@@ -1699,6 +1908,7 @@ export class GameScene {
             }
         } else {
             this.timerFrame.visible = false;
+            if (this.isTutorial) this.timerText.visible = false;
         }
 
         for (let i = this.bullets.length - 1; i >= 0; i--) {
@@ -1710,7 +1920,23 @@ export class GameScene {
                 Composite.remove(world, b.body);
                 this._bulletByBody.delete(b.body);
                 this.bullets.splice(i, 1);
-                if (this.bullets.length === 0) setTimeout(() => this.nextTurn(), 1000);
+                if (this.bullets.length === 0) {
+                    if (this.isTutorial) {
+                        // En tuto, on repasse vite en ACTING pour permettre de retirer.
+                        setTimeout(() => this.nextTurn(), 700);
+                    } else {
+                        setTimeout(() => this.nextTurn(), 1000);
+                    }
+                }
+            }
+        }
+
+        // Le retour auto camera joueur apres tir est reserve au tutoriel.
+        if (this.isTutorial && this.bullets.length === 0) {
+            const currentPlayer = this.players[this.currentPlayerIndex];
+            if (currentPlayer?.body) {
+                this.camera.follow(currentPlayer.body);
+                this.camera.manualMode = false;
             }
         }
 
@@ -1722,6 +1948,18 @@ export class GameScene {
     }
 
     nextTurn() {
+        if (this.isTutorial) {
+            this.turnState = 'ACTING';
+            this.players.forEach((p, idx) => {
+                p.isActive = idx === 0;
+                p.movementLocked = idx !== 0;
+            });
+            this.timerText.visible = false;
+            this.timerFrame.visible = false;
+            this.infoText.visible = false;
+            return;
+        }
+
         const alive = this.players.filter(p => p.hp > 0);
         if (alive.length <= 1) { this.showVictory(alive[0] || this.players[0]); return; }
 
@@ -1781,6 +2019,8 @@ export class GameScene {
     }
 
     showVictory(winner) {
+        if (this.turnState === 'FINISHED') return;
+
         this.turnState = 'FINISHED';
         saveSingleMatchResult(this.players, winner.id);
         this.turnOverlay.clear()
@@ -1910,15 +2150,29 @@ export class GameScene {
         Events.off(engine, 'collisionStart', this.collisionHandler);
         this.app.ticker.remove(this.update);
         if (this._shopModal) { this._shopModal.remove(); this._shopModal = null; }
+        if (this._tutorialShopBtn && this._tutorialShopBtnHandler) {
+            this._tutorialShopBtn.removeEventListener('click', this._tutorialShopBtnHandler);
+            this._tutorialShopBtn = null;
+            this._tutorialShopBtnHandler = null;
+        }
+        if (this.tutorialOverlay) {
+            this.tutorialOverlay.remove();
+            this.tutorialOverlay = null;
+        }
+        if (this._tutorialBackBtn) {
+            this._tutorialBackBtn.remove();
+            this._tutorialBackBtn = null;
+        }
         this._activeDrops.forEach(d => {
             if (d?.sprite?.parent) d.sprite.parent.removeChild(d.sprite);
         });
         this._activeDrops = [];
         this._bulletByBody.clear();
         ['hud-cmd-btn', 'hud-cmd-popup', 'hud-opt-btn', 'hud-opt-popup',
-         'hud-shop-btn', 'hud-shop-popup', 'hud-dig-btn', 'hud-inv', 'hud-mm', 'hud-turn', 'hud-hp-wrap'].forEach(id => {
+         'hud-shop-btn', 'hud-shop-popup', 'hud-dig-btn', 'hud-inv', 'hud-mm', 'hud-turn', 'hud-hp-wrap', 'hud-tuto-back-btn'].forEach(id => {
             const el = document.getElementById(id); if (el) el.remove();
         });
+        const ev = document.getElementById('event-popup'); if (ev) ev.remove();
         const pxs = document.getElementById('pxsel-fonts'); if (pxs) pxs.remove();
     }
 }

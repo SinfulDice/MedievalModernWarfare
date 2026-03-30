@@ -228,7 +228,7 @@ export class Player {
     }
 
     // ── Étape 1 : lit les inputs et applique les vélocités (avant Engine.update)
-    applyInput() {
+    applyInput(deltaMs = 16.67) {
         if (!this.body) return;
 
         const currentVY = this.body.velocity.y;
@@ -241,7 +241,7 @@ export class Player {
         let targetVx = 0;
         if (this.isActive && !this.movementLocked) {
             if (keys['KeyD']) { targetVx = 4; this.facingDir = 1; }
-            if (keys['KeyQ']) { targetVx = -4; this.facingDir = -1; }
+            if (keys['KeyA']) { targetVx = -4; this.facingDir = -1; }
 
             const rawGrounded = isBodyGrounded(this.body);
             if (rawGrounded) {
@@ -253,7 +253,7 @@ export class Player {
             const onGround = this._groundedFrames > 0;
             const jumpSpeed = -5 * (this.jumpBoostMultiplier || 1);
 
-            const jumpPressed = keys['Space'] || keys['KeyZ'] || keys['KeyW'];
+            const jumpPressed = keys['Space'];
 
             if (jumpPressed && onGround && !this.jumpLocked) {
                 Body.setVelocity(this.body, { x: this.body.velocity.x, y: jumpSpeed });
@@ -273,7 +273,10 @@ export class Player {
                 if (keys[`Digit${n}`] && i < this.weapons.length) this.switchWeapon(i);
             });
 
-            if (this.isCharging) this.charge = Math.min(this.charge + 0.5, this.maxCharge);
+            if (this.isCharging) {
+                const chargeStep = (this.maxCharge * Math.max(0, deltaMs)) / 1000;
+                this.charge = Math.min(this.charge + chargeStep, this.maxCharge);
+            }
         } else {
             this.resetCharge();
         }

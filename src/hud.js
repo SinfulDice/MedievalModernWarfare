@@ -336,9 +336,9 @@ export function createHUD(players, terrain) {
         <div class="pop-body">
             <div>
                 <div class="sec-lbl">Déplacements</div>
-                <div class="hrow"><span class="hact">Gauche</span><div class="hkeys"><span class="hkey">Q</span><span style="color:rgba(51,255,136,.3)">/</span><span class="hkey">A</span></div></div>
+                <div class="hrow"><span class="hact">Gauche</span><div class="hkeys"><span class="hkey">Q</span></div></div>
                 <div class="hrow"><span class="hact">Droite</span><div class="hkeys"><span class="hkey">D</span></div></div>
-                <div class="hrow"><span class="hact">Sauter</span><div class="hkeys"><span class="hkey w">Espace</span><span style="color:rgba(51,255,136,.3)">/</span><span class="hkey">Z</span><span style="color:rgba(51,255,136,.3)">/</span><span class="hkey">W</span></div></div>
+                <div class="hrow"><span class="hact">Sauter</span><div class="hkeys"><span class="hkey w">Espace</span></div></div>
             </div>
             <div class="hdiv"></div>
             <div>
@@ -359,9 +359,16 @@ export function createHUD(players, terrain) {
             </div>
             <div class="hdiv"></div>
             <div>
+                <div class="sec-lbl">Caméra</div>
+                <div class="hrow"><span class="hact">Déplacer la vue</span><div class="hkeys"><span class="hkey w">Flèches</span></div></div>
+                <div class="hrow"><span class="hact">Recentrer joueur</span><div class="hkeys"><span class="hkey w">Entrée</span></div></div>
+            </div>
+            <div class="hdiv"></div>
+            <div>
                 <div class="sec-lbl">Construction</div>
                 <div class="hrow"><span class="hact">Poser une plateforme</span><div class="hkeys"><span class="hkey">F</span></div></div>
                 <div class="hrow"><span class="hact">Tourner (8 positions)</span><div class="hkeys"><span class="hkey w">Molette</span></div></div>
+                <div class="hrow"><span class="hact">Changer angle (+1/-1)</span><div class="hkeys"><span class="hkey">X</span><span style="color:rgba(51,255,136,.3)">/</span><span class="hkey">W</span></div></div>
                 <div class="hrow"><span class="hact">Point de rotation</span><div class="hkeys"><span class="hkey w">Curseur</span></div></div>
             </div>
             <div class="hdiv"></div>
@@ -401,7 +408,7 @@ export function createHUD(players, terrain) {
                 </div>
             </div>
         </div>
-        <div class="tip-bar"><span class="tip-txt">Maintenez R (ou clic gauche) puis relâchez pour tirer. E creuse. A ouvre le shop. F construit au curseur (1 plateforme max / tour).</span></div>
+        <div class="tip-bar"><span class="tip-txt">Maintenez R (ou clic gauche) puis relâchez pour tirer. E creuse. A ouvre le shop. Flèches: caméra, Entrée: recentrer. F construit au curseur (1 plateforme max / tour).</span></div>
     `);
     bind(cmdBtn, cmdPop);
 
@@ -419,7 +426,7 @@ export function createHUD(players, terrain) {
             <div class="hdiv"></div>
             <div>
                 <div class="sec-lbl">Interface</div>
-                <div class="osl-row"><span class="osl-lbl">Taille UI</span><input type="range" class="oslider" id="sl-uiscale" min="75" max="150" value="100" step="25"><span class="osl-val" id="val-uiscale">100%</span></div>
+                <div class="osl-row"><span class="osl-lbl">Taille UI</span><input type="range" class="oslider" id="sl-uiscale" min="75" max="150" value="150" step="25"><span class="osl-val" id="val-uiscale">150%</span></div>
                 <div class="osl-row"><span class="osl-lbl">Opacité HUD</span><input type="range" class="oslider" id="sl-opacity" min="30" max="100" value="100"><span class="osl-val" id="val-opacity">100%</span></div>
                 <div class="osl-row"><span class="osl-lbl">Zoom carte</span><input type="range" class="oslider" id="sl-zoom" min="1" max="3" value="2" step="1"><span class="osl-val" id="val-zoom">×1.5</span></div>
                 <div class="osl-row"><span class="osl-lbl">Volume Musique</span><input type="range" class="oslider" id="sl-music-volume" min="0" max="100" value="50" step="5"><span class="osl-val" id="val-music-volume">50%</span></div>
@@ -445,7 +452,7 @@ export function createHUD(players, terrain) {
         document.getElementById('hud-mm')?.classList.toggle('hud-hidden', !this.classList.contains('on'));
     });
     // Taille UI en temps réel
-    const _savedScale = parseInt(localStorage.getItem('worm_ui_scale') || '100');
+    const _savedScale = parseInt(localStorage.getItem('worm_ui_scale') || '150');
     document.getElementById('sl-uiscale').value = _savedScale;
     document.getElementById('val-uiscale').textContent = _savedScale + '%';
     document.getElementById('sl-uiscale').addEventListener('input', function () {

@@ -134,6 +134,26 @@ export class MenuScene {
             }
             .menu-leaderboard:active { transform:translateY(1px); }
 
+            .menu-tutorial {
+                padding:10px 22px; z-index:1;
+                font-family:'Press Start 2P',monospace; font-size:.44rem; letter-spacing:.1em;
+                background:rgba(18,24,34,.82); color:rgba(142,210,255,.72);
+                border:2px solid rgba(142,210,255,.38); border-radius:8px;
+                border-bottom:3px solid rgba(142,210,255,.58);
+                box-shadow:0 0 0 1px rgba(0,0,0,.5);
+                cursor:pointer; text-transform:uppercase;
+                text-shadow:0 0 8px currentColor;
+                transition:color .12s,border-color .12s,background .12s,box-shadow .12s,transform .1s;
+                animation:m-fade .7s ease .46s both;
+            }
+            .menu-tutorial:hover {
+                color:#8ed2ff; border-color:#8ed2ff;
+                background:rgba(142,210,255,.12);
+                box-shadow:0 0 0 1px rgba(0,0,0,.5),0 0 18px rgba(142,210,255,.25);
+                transform:translateY(-2px);
+            }
+            .menu-tutorial:active { transform:translateY(1px); }
+
             /* ── Scale UI option ── */
             .menu-scale-wrap {
                 display:flex; flex-direction:column; align-items:center; gap:10px;
@@ -217,6 +237,16 @@ export class MenuScene {
         const lbBtn = document.createElement('button'); lbBtn.className = 'menu-leaderboard';
         lbBtn.textContent = '🏆 LEADERBOARD';
         lbBtn.addEventListener('click', () => this.manager.changeScene('leaderboard'));
+        const tutoBtn = document.createElement('button'); tutoBtn.className = 'menu-tutorial';
+        tutoBtn.textContent = '🎯 TUTORIEL';
+        tutoBtn.addEventListener('click', () => {
+            this.manager.changeScene('game', {
+                tutorial: true,
+                p1: { name: 'Apprenti', classId: 'wizard', skin: 'Gandalf' },
+                p2: { name: 'Cible', classId: 'warrior', skin: 'Aragorn' },
+            });
+        });
+        ov.appendChild(tutoBtn);
         ov.appendChild(lbBtn);
 
         // ── Sélecteur de taille d'UI ──
@@ -274,7 +304,9 @@ export class MenuScene {
 
 /* ── Helpers scale ── */
 function getSavedScale() {
-    return parseInt(localStorage.getItem(SCALE_KEY) || '100');
+    const parsed = parseInt(localStorage.getItem(SCALE_KEY) || '150');
+    if ([75, 100, 125, 150].includes(parsed)) return parsed;
+    return 150;
 }
 
 export function applyUIScale(scale) {
